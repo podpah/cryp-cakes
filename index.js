@@ -5,7 +5,7 @@ const app = express();
 const morgan = require('morgan');
 const { PORT = 3000 } = process.env;
 // TODO - require express-openid-connect and destructure auth from it
-const { auth } = require('express-openid-connect');
+const { auth, requiresAuth } = require('express-openid-connect');
 
 const { User, Cupcake } = require('./db');
 
@@ -17,7 +17,7 @@ app.use(express.urlencoded({extended:true}));
 
   const {secret ,  base, client, issuer} = process.env
   const config = {
-    authRequired: true,
+    authRequired: false,
     auth0Logout: true,
     secret: secret,
     baseURL: base,
@@ -29,14 +29,14 @@ app.use(express.urlencoded({extended:true}));
 
   app.get('/', (req, res) => {
     // res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
-    res.send(`<h1 style='text-align:center'>Testing</h1>
+    res.send(req.oidc.isAuthenticated() ? `<h1 style='text-align:center'>Testing</h1>
     <h2>Hey ${req.oidc.user.name}</h2>
     <h4>Username: ${req.oidc.user.nickname}</h4>
     <p>${req.oidc.user.email}</p>
-    <img src="${req.oidc.user.picture}">`)
+    <img src="${req.oidc.user.picture}">` : "<h1> Welcome to CrypCakes!</h1> <h3> You are currently not signed in</h3>")
   });
 
-app.get('/cupcakes', async (req, res, next) => {
+app.get('/cupcakes', requiresAuth(),  async (req, res, next) => {
   try {
     const cupcakes = await Cupcake.findAll();
     res.send(cupcakes);
