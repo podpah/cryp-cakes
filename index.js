@@ -36,6 +36,11 @@ app.use(express.urlencoded({extended:true}));
     <img src="${req.oidc.user.picture}">` : "<h1> Welcome to CrypCakes!</h1> <h3> You are currently not signed in</h3>")
   });
 
+  app.use(async (req, res, next) => {
+    if (req.oidc.isAuthenticated) {const [user] = await User.findOrCreate({where: {email : req.oidc.user.email,username : req.oidc.user.nickname, name : req.oidc.user.name}})}
+    next()
+  })
+
 app.get('/cupcakes', requiresAuth(),  async (req, res, next) => {
   try {
     const cupcakes = await Cupcake.findAll();
